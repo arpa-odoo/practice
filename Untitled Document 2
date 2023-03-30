@@ -1,0 +1,51 @@
+[ADD] zoomingcar, zoomingcar_project, zoomingcar_account:  sequence,BridgeModule
+
+Created bridge module and implemented ir.sequence, chatterbox,kanbanview,
+demo data,report in zoomingcar module
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[IMP] l10n_in_edi:  Before Test connection check GST number
+
+In this commit:
+=================
+- This commit adds functionality to check if the GST number is present
+  before testing the connection for the l10n_in_reports_gstr.
+
+
+
+
+    def l10n_in_gstr_gst_send_otp(self):
+        if(not(self.company_id.vat)):
+            raise UserError("Please enter a GST number for the company")
+        else:
+            response = self.env["l10n_in.gst.return.period"]._otp_request(self.company_id)
+            if response.get('error'):
+                error_message = "\n".join(["[%s] %s"%(error.get('code'), error.get('message')) for error in response.get("error", {})])
+                raise UserError(error_message)
+            context = {
+                "default_l10n_in_gstr_gst_token": response.get("txn"),
+                "default_company_id": self.company_id.id,
+            }
+            form = self.env.ref("l10n_in_reports_gstr.view_get_otp_validate_wizard")
+            return {
+                "name": _("Otp Request"),
+                "type": "ir.actions.act_window",
+                "res_model": "res.config.settings",
+                "views": [[form.id, "form"]],
+                "target": "new",
+                "context": context,
+            }
+    
